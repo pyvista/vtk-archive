@@ -1,0 +1,79 @@
+{% extends "base.html.j2" %}
+{% import "_parts.html.j2" as p with context %}
+{% block content %}
+{{ p.item_header(item, kind, sigil, author, canonical, "diffs", diff.file_count) }}
+
+<div class="cols">
+  <div class="main">
+    <div class="changes-bar">
+      <strong>{{ diff.file_count }} changed file{{ '' if diff.file_count == 1 else 's' }}</strong>
+      <span class="tally"><span class="add">+{{ diff.added }}</span>
+      <span class="del">&minus;{{ diff.removed }}</span></span>
+      {%- if review_count %}
+      <span class="muted">{{ review_count }} review thread{{ '' if review_count == 1 else 's' }}
+      on these files</span>
+      {%- endif %}
+    </div>
+
+    {%- if diff.truncated %}
+    <p class="note-cap">GitLab caps this endpoint at 1,000 files and this change reached it,
+    so the list below is partial. The
+    <a href="{{ canonical }}/diffs" rel="nofollow noopener">canonical merge request</a> has the rest.</p>
+    {%- endif %}
+
+    {%- for file in diff.files %}
+    <details class="file" {% if diff.file_count <= 10 and not file.omitted %}open{% endif %}>
+      <summary>
+        <span class="status status-{{ file.status }}">{{ file.status }}</span>
+        <code class="path">{{ file.path }}</code>
+        {%- if file.old_path %}<span class="from">from <code>{{ file.old_path }}</code></span>{% endif %}
+        {%- if file.generated %}<span class="generated">generated</span>{% endif %}
+        {%- if not file.status == "deleted" %}
+        <a class="src-link" href="{{ blob_url(code_sha, file.path) }}" rel="nofollow noopener"
+           title="{{ 'This file at this revision' if code_sha else 'This file as it stands on master; this branch was never merged, so its commits are not in the mirror' }}">
+          {{ 'source' if code_sha else 'source (master)' }}</a>
+        {%- endif %}
+        <span class="tally"><span class="add">+{{ file.added }}</span>
+        <span class="del">&minus;{{ file.removed }}</span></span>
+      </summary>
+
+      {%- if file.omitted == "size" %}
+      <p class="note-cap">This file's diff is {{ '{:,}'.format(file.bytes) }} bytes, past what this
+      archive renders inline. Read it on the
+      <a href="{{ canonical }}/diffs" rel="nofollow noopener">canonical merge request</a>.</p>
+      {%- elif file.omitted == "file-cap" %}
+      <p class="note-cap">Past the first {{ max_files }} files, which is as many as this archive
+      renders on one page. Read it on the
+      <a href="{{ canonical }}/diffs" rel="nofollow noopener">canonical merge request</a>.</p>
+      {%- elif not file.hunks %}
+      <p class="note-cap">No textual diff was recorded: the file is binary, empty, or unchanged
+      apart from its mode or name.</p>
+      {%- else %}
+      <table class="diff">
+        {%- for hunk in file.hunks %}
+        <tr class="hunk"><td class="ln" colspan="2"></td><td><code>{{ hunk.header }}</code></td></tr>
+        {%- for line in hunk.lines %}
+        <tr class="l-{{ line.kind }}">
+          <td class="ln">{{ line.old if line.old else '' }}</td>
+          <td class="ln">{{ line.new if line.new else '' }}</td>
+          <td class="src">{{ line_html(line.text) }}</td>
+        </tr>
+        {%- endfor %}
+        {%- endfor %}
+      </table>
+      {%- endif %}
+
+      {%- if file.threads %}
+      <div class="file-threads">
+        {%- for thread in file.threads %}
+        {{ p.thread_block(thread) }}
+        {%- endfor %}
+      </div>
+      {%- endif %}
+    </details>
+    {%- endfor %}
+  </div>
+
+  {{ p.sidebar(item, kind, author, canonical, md_url) }}
+</div>
+{% endblock %}

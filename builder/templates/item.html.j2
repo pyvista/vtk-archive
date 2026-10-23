@@ -1,0 +1,67 @@
+{% extends "base.html.j2" %}
+{% import "_parts.html.j2" as p with context %}
+{% block content %}
+<span data-pagefind-filter="state:{{ 'Merged' if item.state == 'merged' else ('Open' if item.state == 'opened' else 'Closed') }}"></span>
+{{ p.item_header(item, kind, sigil, author, canonical, "conversation", diff_count) }}
+
+<div class="cols">
+  {# `data-pagefind-body` is emitted only on the indexed spelling. It beats a
+     `data-pagefind-ignore` on an ancestor, so leaving it on the work_items
+     alias indexed every issue twice. #}
+  {# One `data-pagefind-meta` per attribute. The comma-separated form is NOT
+     split: it stored the whole string under `iid` and the result pill read
+     "Iid: #727,author:Kitware Robot,opened:2004-03-29". #}
+  <div class="main"{% if indexable %} data-pagefind-body
+       data-pagefind-filter="kind:{{ 'Merge request' if kind == 'merge_requests' else 'Issue' }}"{% endif %}>
+    {%- if indexable %}
+    <span data-pagefind-meta="author:{{ author }}" hidden></span>
+    <span data-pagefind-meta="opened:{{ item.created_at[:10] }}" hidden></span>
+    {%- endif %}
+    <article class="note opening">
+      <div class="note-head">
+        {{ p.avatar(author) }}
+        <strong>{{ author }}</strong>
+        <time datetime="{{ item.created_at }}">{{ item.created_at[:16] | replace("T", " ") }}</time>
+      </div>
+      {%- if body %}
+      <div class="note-body md">{{ body }}</div>
+      {%- else %}
+      <div class="note-body empty">No description was given.</div>
+      {%- endif %}
+    </article>
+
+    {%- if kind == "merge_requests" and diff_count %}
+    <p class="diff-jump">
+      <a href="/vtk/vtk/-/merge_requests/{{ item.iid }}/diffs">
+        View the {{ diff_count }} changed file{{ '' if diff_count == 1 else 's' }}
+      </a>
+    </p>
+    {%- endif %}
+
+    <h2 class="section-head">
+      {{ comment_count }} comment{{ '' if comment_count == 1 else 's' }}
+      {% if system_count %}<span class="muted">and {{ system_count }} event{{ '' if system_count == 1 else 's' }}</span>{% endif %}
+    </h2>
+
+    <div class="timeline">
+      {%- for entry in timeline %}
+      {%- if entry.system %}
+      {{ p.system_entry(entry.note) }}
+      {%- else %}
+      {{ p.thread_block(entry.thread) }}
+      {%- endif %}
+      {%- endfor %}
+    </div>
+
+    {%- if not timeline %}
+    <p class="empty">No comments were recorded.</p>
+    {%- endif %}
+
+    {%- if mantis and mantis.notes %}
+    {{ p.mantis_section(mantis) }}
+    {%- endif %}
+  </div>
+
+  {{ p.sidebar(item, kind, author, canonical, md_url) }}
+</div>
+{% endblock %}

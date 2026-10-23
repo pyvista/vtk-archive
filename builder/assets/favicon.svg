@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img"
+     aria-label="VTK archive">
+  <!-- An original mark, not Kitware's VTK logo. The archive says on every page
+       that it is not affiliated with Kitware, so it does not wear their mark.
+       An archive box whose lid is a wireframe mesh: the thing being stored,
+       and the thing storing it. -->
+  <title>VTK archive</title>
+  <defs>
+    <linearGradient id="box" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#4493f8"/>
+      <stop offset="1" stop-color="#1f6feb"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="64" height="64" rx="13" fill="#0d1117"/>
+
+  <!-- Lid: a triangulated surface, the shape VTK actually draws. -->
+  <g stroke="#eb6834" stroke-width="2.1" stroke-linejoin="round"
+     stroke-linecap="round" fill="none">
+    <path d="M10 22 32 12 54 22 32 32Z"/>
+    <path d="M10 22 32 32M32 12 32 32M21 17 43 27M43 17 21 27"/>
+  </g>
+
+  <!-- Body: the box the mesh is kept in. Flat top, or it reads as an envelope. -->
+  <path d="M11 33h42v14a4 4 0 0 1-4 4H15a4 4 0 0 1-4-4Z" fill="url(#box)"/>
+  <rect x="9" y="30" width="46" height="7" rx="2.5" fill="#79b8ff"/>
+  <rect x="26" y="41" width="12" height="4" rx="2" fill="#0d1117" opacity=".45"/>
+</svg>

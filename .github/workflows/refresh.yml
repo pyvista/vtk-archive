@@ -1,0 +1,121 @@
+name: Refresh
+
+# The whole maintenance cycle: restore the corpus, crawl what changed, rebuild,
+# reindex, deploy, write the corpus back. docs/MAINTENANCE.md.
+on:
+  schedule:
+    # Once a day. Kitware's server sees one sequential pass, never a swarm.
+    # Sunday is its own entry so the build step can tell it apart and go --full.
+    - cron: "17 7 * * 1-6"
+    - cron: "17 7 * * 0"
+  workflow_dispatch:
+    inputs:
+      full:
+        description: "Rebuild every page instead of only what changed"
+        type: boolean
+        default: false
+      deploy:
+        description: "Deploy the result"
+        type: boolean
+        default: true
+
+# Never two at once: the passes take a per-corpus lock, so the second run would
+# only refuse. One queued run is enough.
+concurrency:
+  group: refresh
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 330
+    env:
+      GITLAB_TOKEN: ${{ secrets.GITLAB_TOKEN }}
+      R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
+      R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+      R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+      R2_BUCKET: ${{ vars.R2_BUCKET || 'vtk-archive' }}
+      VTK_ARCHIVE_SITE: ${{ vars.VTK_ARCHIVE_SITE || 'https://vtk-archive.pyvista.org' }}
+    steps:
+      - uses: actions/checkout@v7
+
+      # Exact tag: setup-uv publishes no moving major alias past v7.
+      - uses: astral-sh/setup-uv@v10.3.2
+        with:
+          enable-cache: true
+          # Pinned, so the scheduled run is not the thing that discovers a
+          # version difference. docs/MAINTENANCE.md "Pinning the actions".
+          python-version: "3.14"
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "22"
+
+      - name: Install rclone
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends rclone
+
+      - name: Report free disk
+        # 2.5 GB of corpus and 4.2 GB of dist/, so the number goes on the log
+        # before the run writes anything. docs/MAINTENANCE.md.
+        run: df -h . && rclone version
+
+      - run: uv sync --frozen
+
+      - name: Check the code before trusting it with the corpus
+        run: |
+          uv run ruff check .
+          uv run pytest -q
+
+      - name: Restore the corpus from R2
+        run: scripts/corpus.sh pull
+
+      - name: What came back
+        run: uv run vtk-archive status
+
+      # skeleton refreshes updated_at and every other pass compares against it.
+      - name: Crawl
+        run: |
+          set -euo pipefail
+          uv run vtk-archive skeleton --incremental
+          uv run vtk-archive notes
+          uv run vtk-archive diffs
+          uv run vtk-archive mantis
+          uv run vtk-archive attachments
+          uv run vtk-archive commits
+
+      - name: Check nothing personal got in
+        run: uv run vtk-archive scrub
+
+      - name: Write the corpus back to R2
+        # Before the build, so a build or deploy failure never loses a crawl.
+        run: scripts/corpus.sh push
+
+      - name: Build
+        # Weekly --full settles the cross-references an incremental build leaves
+        # as plain text. docs/MAINTENANCE.md "Incremental builds".
+        run: uv run vtk-archive build ${{ (inputs.full || github.event.schedule == '17 7 * * 0') && '--full' || '' }}
+
+      - name: Index
+        run: uv run vtk-archive index
+
+      - name: Deploy
+        if: ${{ github.event_name == 'schedule' || inputs.deploy }}
+        env:
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
+        # A file-digest deploy, with --timeout raised off the CLI's 20-minute
+        # default. docs/HOSTING.md "Partial deploys on Netlify".
+        run: npx --yes netlify-cli@27 deploy --dir dist --prod --no-build --timeout 3600
+
+      - name: Keep the run's own account of itself
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: state
+          path: |
+            data/state.json
+            dist/_manifest.json
+          if-no-files-found: warn

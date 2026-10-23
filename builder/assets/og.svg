@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <defs>
+    <style>
+      .t { font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; }
+    </style>
+  </defs>
+
+  <rect width="1200" height="630" fill="#0d1117"/>
+  <rect x="0" y="0" width="1200" height="8" fill="#d4a72c"/>
+
+  <!-- read-only banner, the same note the site itself carries -->
+  <rect x="80" y="86" width="286" height="40" rx="6" fill="#1e1a07" stroke="#d4a72c33"/>
+  <text class="t" x="100" y="113" font-size="19" font-weight="600" fill="#d4a72c"
+        letter-spacing="1.4">READ-ONLY ARCHIVE</text>
+
+  <text class="t" x="80" y="248" font-size="92" font-weight="700" fill="#f0f6fc">VTK Archive</text>
+
+  <text class="t" x="80" y="322" font-size="35" fill="#9198a1">The issue and merge-request history of the</text>
+  <text class="t" x="80" y="370" font-size="35" fill="#9198a1">Visualization Toolkit, kept readable.</text>
+
+  <line x1="80" y1="432" x2="1120" y2="432" stroke="#3d444d"/>
+
+  <!-- Floors, not counts: the archive only grows, so these stay true. -->
+  <text class="t" x="80" y="486" font-size="30" font-weight="600" fill="#f0f6fc">5,000+ issues</text>
+  <text class="t" x="330" y="486" font-size="30" font-weight="600" fill="#f0f6fc">13,000+ merge requests</text>
+  <text class="t" x="760" y="486" font-size="30" font-weight="600" fill="#f0f6fc">230,000+ comments</text>
+
+  <text class="t" x="80" y="552" font-size="26" fill="#4493f8">vtk-archive.pyvista.org</text>
+  <text class="t" x="80" y="592" font-size="22" fill="#59636e">Mirrored from gitlab.kitware.com/vtk/vtk. Not affiliated with Kitware.</text>
+</svg>

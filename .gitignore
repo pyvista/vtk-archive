@@ -1,0 +1,22 @@
+.venv/
+__pycache__/
+*.pyc
+.ruff_cache/
+*.egg-info/
+
+# Build output: regenerated from data/ in about two minutes, never committed.
+dist/
+
+# The corpus. GitHub hard-blocks any file over 100 MB on push and
+# merge_requests.ndjson is 831 MB, so this cannot live in git at all.
+# docs/MAINTENANCE.md "Where the corpus lives".
+data/
+
+# Attachments: 1.1 GB of binaries fetched from issue threads.
+attachments/
+
+# A bare clone of VTK, used only to ask which commits the mirror holds.
+.cache/
+
+# Local credentials. The real ones live in ~/.config/vtk-archive/env
+.env

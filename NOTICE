@@ -1,0 +1,79 @@
+vtk-archive
+===========
+
+An independent, read-only archive of the public issue and merge-request history
+of the Visualization Toolkit (VTK) from gitlab.kitware.com/vtk/vtk.
+
+Not affiliated with, operated by, reviewed by or endorsed by Kitware, Inc.
+
+
+Three different things, three different positions
+-------------------------------------------------
+
+1. The software in this repository (crawler, builder, templates)
+   MIT licensed. See LICENSE.
+
+2. VTK itself
+   Copyright (c) 1993-2015 Ken Martin, Will Schroeder, Bill Lorensen, with
+   later contributions by Kitware, Inc. and the VTK community. Distributed
+   under the OSI-approved BSD 3-clause licence.
+   https://github.com/Kitware/VTK/blob/master/Copyright.txt
+
+   This project republishes no copy of VTK's source tree and nothing that can
+   be built; code links point at Kitware's own GitHub mirror or back at
+   gitlab.kitware.com. It does reproduce the diff of each merge request, hunk
+   by hunk, and whatever code an author pasted into a comment, because a code
+   review cannot be read without the code it reviews. Those excerpts are
+   redistributed under the BSD 3-clause licence above, whose copyright notice
+   and conditions the licence requires be retained: they are reproduced
+   verbatim in licenses/VTK-Copyright.txt.
+
+3. The archived discussion (issue reports, comments, code review)
+   Written by the people whose names appear on it and remains their work.
+   This project claims no copyright over it and grants no licence to it. It is
+   reproduced unmodified from a public project for preservation and reference,
+   and every page links to its canonical original.
+
+   Anyone intending to reuse an author's words beyond quotation should ask
+   that author.
+
+
+Trademarks
+----------
+
+"VTK", "Visualization Toolkit" and "Kitware" identify a project and a company
+this archive is not part of. They are used only to describe what is archived.
+
+
+Personal data, and raising a concern
+-----------------------------------
+
+Author names and usernames are reproduced as they appear on the original
+pages, because an unattributed archive of a discussion is a worse record than
+no archive. Profile email addresses returned by GitLab's API are discarded
+before anything is stored.
+
+Anyone with a concern about something published here can open an issue:
+https://github.com/pyvista/vtk-archive/issues/new?template=removal-request.yml
+
+Personal data, and material that should not have been public in the first
+place, is removed on request from the person it concerns. Everything else is a
+public technical discussion that this archive exists to preserve, so a request
+to remove it is read on its merits rather than granted automatically. Nothing
+removed here is removed from gitlab.kitware.com, which remains the original
+and authoritative copy.
+
+
+Collection
+----------
+
+Collected through GitLab's public REST API using an ordinary user account with
+read-only (read_api) access to a public project. Requests are sequential, with
+a delay, never concurrent. The collector identifies itself honestly as
+"vtk-archive/0.1 (+https://github.com/pyvista/vtk-archive; archival mirror)".
+No bot protection was circumvented; where an endpoint admits only certain
+clients, this archive goes without the data rather than claiming to be one.
+
+A purpose of this archive is to absorb automated traffic that would otherwise
+fall on gitlab.kitware.com, which Kitware funds and maintains for VTK's
+development.

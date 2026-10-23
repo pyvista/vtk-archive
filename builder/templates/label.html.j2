@@ -1,0 +1,43 @@
+{% extends "base.html.j2" %}
+{% block content %}
+<div class="list-head">
+  <h1><span class="chip chip-lg">{{ label.name }}</span></h1>
+  <span class="muted">
+    {{ '{:,}'.format(label.issues) }} issue{{ '' if label.issues == 1 else 's' }},
+    {{ '{:,}'.format(label.merge_requests) }} merge request{{ '' if label.merge_requests == 1 else 's' }}
+    &middot; page {{ page }} of {{ pages }}
+  </span>
+  <a class="muted" href="/vtk/vtk/-/labels">All labels</a>
+</div>
+
+<div class="listing">
+  {%- for row in rows %}
+  <div class="row">
+    <span class="pill pill-{{ 'merged' if row.state == 'merged' else row.state }} small">
+      {%- if row.state == "opened" %}Open{% elif row.state == "merged" %}Merged
+      {%- elif row.state == "closed" %}Closed{% else %}{{ row.state }}{% endif -%}
+    </span>
+    <div class="row-main">
+      <a class="row-title" href="{{ row.href }}">{{ row.title }}</a>
+      {%- for other in row.labels %}
+      <a class="chip" href="/vtk/vtk/-/labels/{{ other.slug }}">{{ other.name }}</a>
+      {%- endfor %}
+      <div class="row-meta">
+        {{ row.sigil }}{{ row.iid }} opened
+        <time datetime="{{ row.created_at }}">{{ row.created_at[:10] }}</time>
+        by {{ row.author }}
+      </div>
+    </div>
+    {%- if row.comments %}
+    <a class="row-cmt" href="{{ row.href }}">{{ row.comments }}</a>
+    {%- endif %}
+  </div>
+  {%- endfor %}
+</div>
+
+<nav class="pager">
+  {%- if page > 1 %}<a href="{{ prev_href }}">&larr; Newer</a>{% endif %}
+  <span class="muted">{{ page }} / {{ pages }}</span>
+  {%- if page < pages %}<a href="{{ next_href }}">Older &rarr;</a>{% endif %}
+</nav>
+{% endblock %}

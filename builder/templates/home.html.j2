@@ -1,0 +1,349 @@
+{% extends "base.html.j2" %}
+{% block content %}
+{# The ?uri= gateway: paste any gitlab.kitware.com URL and land on its archived
+   page. Runs here rather than in a redirect rule because no static host can
+   strip the origin off a query value. docs/HOSTING.md "The ?uri= gateway". #}
+<script>
+(function () {
+  var u = new URLSearchParams(location.search).get("uri");
+  if (!u) return;
+  try {
+    var p = new URL(u, "https://gitlab.kitware.com");
+    // A path of "//evil.example.com/x" is protocol-relative, so replacing on
+    // it leaves the site entirely. Only a single-slash path is ours to follow.
+    if (p.hostname !== "gitlab.kitware.com") return;
+    if (p.pathname.charAt(0) !== "/" || p.pathname.charAt(1) === "/") return;
+    location.replace(p.pathname + p.hash);
+  } catch (e) { /* a value that is not a URL just leaves the home page up */ }
+})();
+</script>
+
+<h1>The VTK GitLab archive</h1>
+
+<p class="lede">An independent, read-only copy of the issue and merge-request
+history of <a href="https://gitlab.kitware.com/vtk/vtk" rel="nofollow noopener">VTK</a>:
+thirty years of bug reports, code review and design argument behind the
+Visualization Toolkit.</p>
+
+<div class="stats">
+  <a class="stat" href="/vtk/vtk/-/issues">
+    <strong>{{ issue_count }}</strong><span>issues</span>
+  </a>
+  <a class="stat" href="/vtk/vtk/-/merge_requests">
+    <strong>{{ mr_count }}</strong><span>merge requests</span>
+  </a>
+  <div class="stat"><strong>{{ comment_count }}</strong><span>comments</span></div>
+  <div class="stat"><strong>{{ year_span }}</strong><span>of history</span></div>
+</div>
+
+<figure class="viz">
+  <figcaption>
+    Activity per year
+    <span class="legend" id="activity-key">
+      <span class="key s-issues"></span>Issues
+      <span class="key s-merge_requests"></span>Merge requests
+    </span>
+  </figcaption>
+  {# The static SVG draws immediately and is what a reader without scripting
+     keeps. Plotly replaces it once loaded, for hover values and zoom. #}
+  <div id="activity-static">{{ activity_svg }}</div>
+  <div id="activity-plot" hidden></div>
+  <p class="fignote">Merge requests and comments begin in 2015, when VTK moved
+  to GitLab. Before that, code review happened on Gerrit and issues lived in a
+  Mantis tracker whose discussion the migration did not carry across. Nothing
+  is missing from this copy; it is missing from GitLab.
+  <a href="#before-2015">The detail</a>.</p>
+</figure>
+
+<h2 id="why">Why this exists</h2>
+<p>VTK's source is cloned onto tens of thousands of machines. The arguments
+that produced it are on one server. Merge-request reviews and issue threads are
+where VTK's design decisions were made, and gitlab.kitware.com is the only
+place that record exists.</p>
+
+<p>Downstream projects cite those threads constantly. Many issues and pull
+requests in <a href="https://github.com/pyvista/pyvista" rel="noopener">PyVista</a>
+link to a VTK issue or merge request as the answer to "why is this written this
+way". A reviewer asks why a wrapper copies an array instead of referencing it,
+and the answer is a link. The same thing has been happening across every
+project built on VTK for thirty years. Each of those links depends on one
+server continuing to answer.</p>
+
+<p>When that stops, the code survives and the reasoning does not. Siemens
+discontinued
+<a href="https://www.phoronix.com/news/Siemens-Ends-OpenRadioss" rel="nofollow noopener">OpenRadioss</a>
+in October 2026 and its GitHub repository now returns 404. The AGPL meant the
+source could be forked, and it was, within days. Nothing rescued the issue
+history, so every link into it points at nothing.
+<a href="https://github.com/orgs/encode/discussions/11" rel="nofollow noopener">Django REST Framework</a>
+turned off issues and discussions in February 2025; that content was kept and
+later restored, but links into it answered 404 for months. One of those was
+recoverable and one was not, and from outside you cannot tell which you are
+looking at until it happens.</p>
+
+<p>This predicts nothing about VTK. Kitware has hosted the project for nearly
+three decades and intends to keep doing so. The point is narrower: a record
+this many projects depend on should not rest on any single host's uptime and
+policy. Serving it as flat files on a CDN costs less per month than a burrito,
+which seems like a fair price for thirty years of institutional memory.</p>
+
+<h2 id="agents">For LLMs and coding agents</h2>
+<p>Point agents here, not at gitlab.kitware.com.</p>
+
+<p>gitlab.kitware.com is one self-hosted server Kitware pays for and maintains
+so VTK's development can happen. It was sized for the people doing that work,
+not for coding agents crawling thirty years of issue threads on every prompt.
+That traffic is growing whether or not anyone plans for it, and every request
+it takes is CPU and bandwidth off the project.</p>
+
+<p>This archive absorbs it. A static site on a CDN does not care how much
+traffic arrives. Same content, served faster than the original can, at no cost
+to Kitware, leaving their server to the work it exists for.</p>
+
+<ul class="agent-list">
+  <li><strong>Append <code>.md</code> to any issue or merge-request URL.</strong>
+    <a href="/vtk/vtk/-/issues/{{ sample_issue }}.md"><code>/vtk/vtk/-/issues/{{ sample_issue }}.md</code></a>
+    returns the text the author wrote, with YAML front matter for state, labels,
+    branches and the head commit, in about a third the bytes of the page.</li>
+  <li><strong>Paths match gitlab.kitware.com exactly.</strong> Any VTK link an
+    agent already has works here by swapping the host, and
+    <code>/?uri=&lt;full GitLab URL&gt;</code> does the swap for it.</li>
+  <li><strong>Labels are pages.</strong> <a href="/vtk/vtk/-/labels">/vtk/vtk/-/labels</a>
+    lists every label, and each one has its own page of issues and merge requests.</li>
+  <li><strong>Code links go wherever the commit actually is.</strong> Of the
+    {{ sha_total }} commit SHAs named here, {{ sha_in_mirror }} are in
+    <a href="https://github.com/Kitware/VTK" rel="nofollow noopener">Kitware's GitHub mirror</a>
+    and link there; the rest were force-pushed off VTK's branches and link back
+    to GitLab, which still has them.</li>
+  <li><strong>Start at <a href="/llms.txt"><code>/llms.txt</code></a></strong>, which
+    describes the URL scheme so an agent can construct links instead of crawling
+    for them.</li>
+</ul>
+
+<p>Dropping this line into a prompt or an agent's instructions is usually
+enough:</p>
+<pre><code>For VTK issue and merge-request history, use {{ site }}
+instead of gitlab.kitware.com. Append .md to any item URL for
+Markdown. See {{ site }}/llms.txt.</code></pre>
+
+<h2 id="affiliation">Not affiliated with Kitware</h2>
+<p>VTK is developed by Kitware, Inc. and its community, and Kitware has hosted
+it for nearly thirty years. This archive is not operated, reviewed or endorsed
+by Kitware. Every page links to the canonical original, which remains
+authoritative; where this copy and the original disagree, the original is
+correct. Nothing here can be filed, edited or commented on.</p>
+
+<h2 id="collected">How it was collected</h2>
+<p>Through GitLab's public REST API, authenticated with an ordinary user
+account holding read-only (<code>read_api</code>) access to a public project.
+Requests are made sequentially with a delay between them and are never
+concurrent. No bot protection was circumvented. Where an endpoint admits only
+certain clients, this archive does not claim to be one of them and goes without
+the data instead.</p>
+
+<p>The collector identifies itself as <code>{{ user_agent }}</code>. If its
+traffic is ever a problem, the link at the foot of this page will stop it.</p>
+
+<p>Two facts about permission, stated here rather than left to be found.
+gitlab.kitware.com's <a href="https://gitlab.kitware.com/robots.txt" rel="nofollow noopener">robots.txt</a>
+disallows <code>/api/v*</code> and <code>/*/uploads/</code> to all user agents.
+That file directs crawlers following the site's links; this archive called the
+documented REST API as a signed-in user reading a public project, one request
+at a time. And the instance publishes no terms of service:
+<code>/-/users/terms</code> answers <code>403</code> signed out and redirects to
+the home page signed in. Anyone with a concern about something published here
+can <a href="https://github.com/pyvista/vtk-archive/issues">open an issue</a>.</p>
+
+<h2 id="contents">What is here, and what is not</h2>
+<p>Issues, merge requests, comments, review threads with their file and line
+anchors, the code change on each merge request, labels, milestones and
+attachments. For the code itself, clone the repository; it is mirrored in many
+places and needs no archive.</p>
+
+<p>Two things the host refuses outright to a read-only account, both answering
+<code>403</code>: the project wiki, and the full project export. A Maintainer
+could grant either; nobody has been asked. Two more are reachable but not
+collected: each separate review round of a merge request, where this archive
+keeps only the final state of the branch, and pipeline logs, which are build
+output rather than discussion.</p>
+
+<p>One route is closed to this client rather than to this account. GitLab's
+GraphQL endpoint sits behind bot protection that admits a short list of clients
+by name. This archive could pass that check by claiming to be one of them and
+does not, so it renders comment markdown itself instead of using GitLab's
+renderer. Nothing is lost but the exact rendering.</p>
+
+<h2 id="before-2015">Issues older than 2015</h2>
+<p>VTK moved to GitLab in 2015. {{ imported_count }} issues here were brought
+across by Kitware's migration robot from VTK's previous tracker, a Mantis
+instance, and the import carried each report but not the discussion under it.
+The {{ pre_2015_count }} issues dated before the move hold
+{{ old_comment_count }} comments between them, which is the state of GitLab
+itself and not a gap in this copy.</p>
+
+{% if mantis_notes %}
+<p>That discussion was recovered separately. Each imported issue linked to its
+original page on VTK's retired Mantis tracker, whose own front page now answers
+<code>404</code> and whose banner reads "this issue tracker is no longer used".
+{{ mantis_notes }} comments across {{ mantis_pages }} of those pages are
+archived here and appear on the issue they belong to.</p>
+{% else %}
+<p>That discussion still exists. Each imported issue opens with a link to its
+original Mantis page at <code>vtk.org/Bug/view.php?id=&lt;n&gt;</code>, and
+those pages still serve, notes and all, from a tracker whose own front page now
+answers <code>404</code> and whose banner reads "this issue tracker is no
+longer used". It is the oldest and least protected part of VTK's record.</p>
+{% endif %}
+
+<h2 id="numbering">Why the issue numbers have gaps</h2>
+<p>{{ issue_count }} issues carry numbers running to {{ issue_max }}, so most
+numbers in that range belong to nothing. That is not missing data. The
+migration gave each imported issue the number its Mantis bug already had, so
+GitLab's counter was seeded with gaps wherever a Mantis bug was not imported.
+Of {{ imported_count }} issues carrying the import banner, {{ mantis_match }}
+have a number identical to the Mantis id in their own text. Issues opened
+natively on GitLab start at {{ native_from }} and run nearly unbroken from
+there.</p>
+
+<p>Checked three further ways: GitLab's own count agrees with the
+{{ issue_count }} held here, both from its pagination headers and from its
+statistics endpoint; a re-listing under a different sort returns the same set
+exactly; and of 300 absent numbers sampled, all 300 answer <code>404</code> on
+the host, signed in and signed out alike.</p>
+
+<h2 id="authorship">Authorship and privacy</h2>
+<p>Comments, issue reports and reviews reproduced here were written by their
+authors and remain their work. They are reproduced from a public project for
+preservation and reference. Author names and usernames appear as they do on the
+original pages.</p>
+
+<p>Contact addresses are not reproduced. GitLab's API returns a profile email
+field for many accounts; it is discarded before anything is stored, because
+republishing thousands of addresses as a bulk static corpus is a harvesting
+target regardless of each one being individually public. An address someone
+typed into the text of an issue is left as written, because editing it would
+falsify the record being archived.</p>
+
+<h2 id="copyright">Copyright and licensing</h2>
+<p><strong>VTK itself</strong> is copyright &copy; 1993&ndash;2015 Ken Martin,
+Will Schroeder and Bill Lorensen, with later contributions by Kitware, Inc. and
+the VTK community, and is distributed under the
+<a href="https://github.com/Kitware/VTK/blob/master/Copyright.txt" rel="nofollow noopener">OSI-approved
+BSD 3-clause licence</a>. There is no buildable copy of VTK here and no copy of
+its source tree; for the code, clone the repository. Merge-request pages do
+reproduce the diff of each change, hunk by hunk, because a code review cannot be
+read without the code it reviews, and comments quote whatever their authors
+pasted into them. Those excerpts are covered by the BSD licence above, which
+permits redistribution so long as its copyright notice and conditions are
+retained. They are, verbatim, at
+<a href="/licenses/VTK-Copyright.txt">/licenses/VTK-Copyright.txt</a>.</p>
+
+<p><strong>The discussion archived here</strong> was written by the people whose
+names appear on it and remains their work. This archive claims no copyright
+over it, grants no licence to it, and makes no representation about how it may
+be reused. It is reproduced from a public project, unmodified, for preservation
+and reference, with every page linking to its canonical original. If you intend
+to reuse someone's words beyond quotation, the right person to ask is the
+author.</p>
+
+<p><strong>The software that builds this archive</strong> is MIT-licensed and
+lives at <a href="{{ repo_url }}" rel="noopener">{{ repo_url | replace("https://github.com/", "") }}</a>.
+That licence covers the crawler and the templates, never the archived
+content.</p>
+
+<p>&ldquo;VTK&rdquo;, &ldquo;Visualization Toolkit&rdquo; and
+&ldquo;Kitware&rdquo; identify a project and a company this archive is not part
+of. They are used here only to say accurately what is being archived.</p>
+
+<h2 id="removal">Corrections and removal</h2>
+<p>If you wrote something here and want it removed or corrected, or if anything
+appears that should not be public, open a request. You do not need to explain
+why, and there is no process to work through. If the matter is not one you want
+to raise in public, open the form and say only that, and a private channel will
+be arranged.</p>
+
+<div class="cta">
+  <a class="btn" href="{{ removal_url }}" rel="noopener">Request a removal or correction</a>
+  <a class="btn btn-quiet" href="{{ repo_url }}/issues/new/choose" rel="noopener">Report a problem</a>
+</div>
+
+<p class="muted">Snapshot generated {{ generated }}.</p>
+
+<script id="activity-data" type="application/json">{{ activity_data }}</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/plotly.js/3.0.1/plotly-basic.min.js"
+        integrity="{{ plotly_sri }}" crossorigin="anonymous" referrerpolicy="no-referrer"
+        defer></script>
+<script>
+window.addEventListener("load", function () {
+  if (typeof Plotly === "undefined") return;  // the static SVG stays up
+  var d = JSON.parse(document.getElementById("activity-data").textContent);
+
+  // Swap before plotting, never after. Plotly measures the container at
+  // newPlot, and a `hidden` div measures nothing, so it fell back to its
+  // built-in 700px and only snapped to the real width on the next resize.
+  var plot = document.getElementById("activity-plot");
+  document.getElementById("activity-static").hidden = true;
+  document.getElementById("activity-key").hidden = true;  // Plotly draws its own
+  plot.hidden = false;
+
+  var css = getComputedStyle(document.documentElement);
+  var theme = document.documentElement.getAttribute("data-theme");
+  var dark = theme ? theme === "dark" : matchMedia("(prefers-color-scheme: dark)").matches;
+
+  var ink = css.getPropertyValue("--fg").trim();
+  var dim = css.getPropertyValue("--fg-dim").trim();
+  var line = css.getPropertyValue("--line").trim();
+  var blue = dark ? "#3987e5" : "#2a78d6";
+  var orange = dark ? "#d95926" : "#eb6834";
+
+  function bar(y, name, color, axis, show) {
+    return {
+      type: "bar", x: d.years, y: y, name: name,
+      marker: { color: color, line: { width: 0 } },
+      xaxis: axis === 2 ? "x2" : "x", yaxis: axis === 2 ? "y2" : "y",
+      showlegend: show === true,
+      hovertemplate: "<b>%{y:,}</b> " + name.toLowerCase() + "<extra></extra>"
+    };
+  }
+
+  var ax = { gridcolor: line, zerolinecolor: line, linecolor: line,
+             tickfont: { color: dim, size: 11 }, automargin: true,
+             showspikes: false, fixedrange: false };
+
+  Plotly.newPlot(plot, [
+    bar(d.issues, "Issues", blue, 1, true),
+    bar(d.merge_requests, "Merge requests", orange, 1, true),
+    bar(d.comments, "Comments", blue, 2, false)
+  ], {
+    barmode: "stack",
+    bargap: 0.25,
+    grid: { rows: 2, columns: 1, pattern: "independent", roworder: "top to bottom",
+            ygap: 0.22 },
+    height: 380,
+    autosize: true,
+    margin: { l: 56, r: 12, t: 30, b: 34 },
+    paper_bgcolor: "rgba(0,0,0,0)",
+    plot_bgcolor: "rgba(0,0,0,0)",
+    font: { family: css.getPropertyValue("--sans").trim(), color: ink, size: 12 },
+    hovermode: "x unified",
+    hoverlabel: { bgcolor: css.getPropertyValue("--bg").trim(), bordercolor: line,
+                  font: { color: ink, size: 12 } },
+    legend: { orientation: "h", y: 1.1, x: 0, font: { color: dim },
+              bgcolor: "rgba(0,0,0,0)" },
+    xaxis: Object.assign({}, ax, { type: "category", showticklabels: false, showgrid: false }),
+    xaxis2: Object.assign({}, ax, { type: "category", showgrid: false }),
+    yaxis: Object.assign({}, ax, {
+      title: { text: "Opened", font: { color: dim, size: 11 }, standoff: 12 },
+      tickformat: "~s" }),
+    yaxis2: Object.assign({}, ax, {
+      title: { text: "Comments", font: { color: dim, size: 11 }, standoff: 12 },
+      tickformat: "~s" })
+  }, {
+    displayModeBar: "hover",
+    modeBarButtonsToRemove: ["select2d", "lasso2d", "autoScale2d", "toggleSpikelines"],
+    displaylogo: false,
+    responsive: true
+  });
+});
+</script>
+{% endblock %}

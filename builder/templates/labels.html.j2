@@ -1,0 +1,28 @@
+{% extends "base.html.j2" %}
+{% block content %}
+<div class="list-head">
+  <h1>Labels</h1>
+  <span class="muted">{{ '{:,}'.format(labels | length) }} labels across issues and merge requests</span>
+</div>
+
+<form class="searchbar" action="/search" method="get" role="search">
+  <input type="search" name="q" placeholder="Search the whole archive"
+         aria-label="Search the archive" autocomplete="off">
+  <button type="submit">Search</button>
+</form>
+
+<div class="listing">
+  {%- for label in labels %}
+  <div class="row">
+    <div class="row-main">
+      <a class="chip chip-lg" href="/vtk/vtk/-/labels/{{ label.slug }}">{{ label.name }}</a>
+      <div class="row-meta">
+        {{ '{:,}'.format(label.issues) }} issue{{ '' if label.issues == 1 else 's' }},
+        {{ '{:,}'.format(label.merge_requests) }} merge request{{ '' if label.merge_requests == 1 else 's' }}
+      </div>
+    </div>
+    <span class="row-cmt">{{ '{:,}'.format(label.total) }}</span>
+  </div>
+  {%- endfor %}
+</div>
+{% endblock %}

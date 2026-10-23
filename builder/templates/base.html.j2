@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{ page_title }}</title>
+{%- if description %}
+<meta name="description" content="{{ description }}">
+{%- endif %}
+{%- if canonical %}
+<link rel="canonical" href="{{ canonical }}">
+{%- endif %}
+<link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
+{# og:image must be absolute: a scraper resolves it against nothing. #}
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="VTK Archive">
+<meta property="og:title" content="{{ page_title }}">
+{%- if description %}
+<meta property="og:description" content="{{ description }}">
+{%- endif %}
+<meta property="og:image" content="{{ site }}/assets/og.png">
+<meta property="og:image:type" content="image/png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="VTK Archive: the issue and merge-request history of the Visualization Toolkit">
+<meta name="twitter:card" content="summary_large_image">
+{# Third-party stylesheets go here, ABOVE ours. Pagefind's ships its own
+   `:root` block of light-mode colours, so loading it later clobbered every
+   theme token we set and painted dark-grey text on the dark background. #}
+{%- block head %}{% endblock %}
+<link rel="stylesheet" href="/assets/style.css">
+</head>
+{# A page the search index must skip: the work_items alias of an issue, and the
+   diff pages, which would swamp the index with source code. #}
+<body{% if not indexable %} data-pagefind-ignore{% endif %}>
+{# Banner and repo header scroll as one block, so a reader always has the
+   "this is an archive" line and the tabs in view. #}
+<div class="topbar">
+<div class="archive-bar">
+  <div class="inner">
+    <span class="tag">Read-only archive</span>
+    {%- if canonical %}
+    <span>Canonical source:
+      <a href="{{ canonical }}" rel="nofollow noopener">{{ canonical | replace("https://", "") }}</a>
+    </span>
+    {%- else %}
+    <span>An independent mirror of VTK's GitLab history. Not affiliated with Kitware.</span>
+    {%- endif %}
+    {# Filled from /snapshot.json at view time, never written into the page: an
+       item page is reused across runs, so a baked stamp would be that page's
+       age. docs/MAINTENANCE.md "The snapshot stamp". #}
+    <a class="snapshot" id="snapshot" href="{{ actions_url }}" rel="noopener"
+       data-pagefind-ignore hidden></a>
+  </div>
+</div>
+
+<header class="repo-head">
+  <div class="inner">
+    <h2 class="repo-name">
+      <a href="/">vtk-archive</a>
+      <span class="repo-kind">Public archive</span>
+    </h2>
+    <nav class="repo-tabs">
+      <a href="/" {% if nav == "readme" %}class="on"{% endif %}>README</a>
+      {# No counts here. A total in the chrome of every page changes whenever
+         the corpus grows, which would make each page stale daily and defeat
+         the incremental build. The list pages carry their own totals. #}
+      <a href="/vtk/vtk/-/issues" {% if nav == "issues" %}class="on"{% endif %}>Issues</a>
+      <a href="/vtk/vtk/-/merge_requests" {% if nav == "merge_requests" %}class="on"{% endif %}>
+        Merge requests
+      </a>
+      <a href="/vtk/vtk/-/labels" {% if nav == "labels" %}class="on"{% endif %}>Labels</a>
+      <a href="/search" {% if nav == "search" %}class="on"{% endif %}>Search</a>
+    </nav>
+  </div>
+</header>
+</div>
+
+<main class="wrap{% if wide %} wide{% endif %}">
+{% block content %}{% endblock %}
+</main>
+
+<footer class="foot">
+  <div class="inner">
+    <div class="foot-cols">
+      <div class="foot-about">
+        <strong>vtk-archive</strong>
+        <p>A read-only archive of
+          <a href="https://gitlab.kitware.com/vtk/vtk" rel="nofollow noopener">gitlab.kitware.com/vtk/vtk</a>.
+          Not affiliated with or endorsed by Kitware.</p>
+        <p>Content remains the work of its authors.
+          <a href="/#copyright">Copyright and licensing</a>.</p>
+      </div>
+
+      <nav class="foot-links" aria-label="Archive">
+        <strong>Archive</strong>
+        <a href="/">README</a>
+        <a href="/vtk/vtk/-/issues">Issues</a>
+        <a href="/vtk/vtk/-/merge_requests">Merge requests</a>
+        <a href="/vtk/vtk/-/labels">Labels</a>
+        <a href="/search">Search</a>
+      </nav>
+
+      <nav class="foot-links" aria-label="Elsewhere">
+        <strong>Elsewhere</strong>
+        <a href="{{ repo_url }}" rel="noopener">Source repository</a>
+        <a href="https://github.com/Kitware/VTK" rel="nofollow noopener">VTK source code</a>
+        <a href="https://gitlab.kitware.com/vtk/vtk" rel="nofollow noopener">VTK on GitLab</a>
+        <a href="/llms.txt">llms.txt</a>
+      </nav>
+
+      <div class="foot-act">
+        <strong>Something wrong?</strong>
+        <a class="btn btn-small" href="{{ removal_url }}" rel="noopener">Request a removal</a>
+        <a class="btn btn-quiet btn-small" href="{{ repo_url }}/issues/new/choose" rel="noopener">Report a problem</a>
+      </div>
+    </div>
+
+    {# Only on pages rebuilt every run. On an item page the date would be the
+       day THAT page last changed, which reads as the archive's age and is not. #}
+    {%- if snapshot %}
+    <p class="foot-base">Snapshot {{ generated }}.</p>
+    {%- endif %}
+  </div>
+</footer>
+<script>
+fetch("/snapshot.json").then(function (r) { return r.json(); }).then(function (s) {
+  var el = document.getElementById("snapshot");
+  if (!el || !s.generated) return;
+  var at = new Date(s.generated);
+  var hours = (Date.now() - at.getTime()) / 3600000;
+  el.textContent = "Snapshot " + at.toISOString().slice(0, 16).replace("T", " ") + " UTC";
+  if (s.run_url) el.href = s.run_url;
+  if (hours > s.stale_after_hours) {
+    el.classList.add("stale");
+    el.title = "No refresh in " + Math.floor(hours) + " hours. Open the workflow to see why.";
+  } else {
+    el.title = "Refreshed " + Math.round(hours) + " hours ago.";
+  }
+  el.hidden = false;
+}).catch(function () {});
+</script>
+</body>
+</html>

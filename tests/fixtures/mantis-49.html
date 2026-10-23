@@ -1,0 +1,149 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+<head>
+	<link rel="stylesheet" type="text/css" href="https://www.vtk.org/Bug/css/default.css" />
+	<script type="text/javascript"><!--
+		if(document.layers) {document.write("<style>td{padding:0px;}<\/style>")}
+	// --></script>
+	<meta http-equiv="Content-type" content="text/html; charset=utf-8" />
+	<meta http-equiv="Pragma" content="no-cache" />
+	<meta http-equiv="Cache-Control" content="no-cache" />
+	<meta http-equiv="Pragma-directive" content="no-cache" />
+	<meta http-equiv="Cache-Directive" content="no-cache" />
+	<meta http-equiv="Expires" content="Thu, 21 Jun 2018 12:10:16 GMT" />
+</head>
+<body>
+<div id="mantis">
+<div id="banner">
+
+
+  <div align="center" style="padding-top: 3em;color: red">
+    <span class="important-msg">
+This issue tracker is no longer used:<br/>
+<ul>
+For VTK, please visit the new <a href="https://gitlab.kitware.com/vtk/vtk/issues">VTK Issues</a/> page.<br/>
+For ParaView, please visit the new <a href="https://gitlab.kitware.com/paraview/paraview/issues">ParaView Issues</a> page.<br/>
+<p style="text-indent: 15em;">For another project, please consult its home page to locate the current issue tracker.
+</ul>
+      </span>
+    <br>
+    </div>
+</div>
+<table class="width100" cellspacing="1"><tr><td class="form-title" colspan="4">View Issue Details&#160;<span class="small"><span class="bracket-link">[&#160;<a href="#bugnotes">Jump to Notes</a>&#160;]</span> </span></td><td class="right" colspan="2"><span class="small"><span class="bracket-link">[&#160;<a href="print_bug_page.php?bug_id=49">Print</a>&#160;]</span> </span></td></tr><tr><td class="category" width="15%">ID</td><td class="category" width="20%">Project</td><td class="category" width="15%">Category</td><td class="category" width="15%">View Status</td><td class="category" width="15%">Date Submitted</td><td class="category" width="20%">Last Update</td></tr><tr class="row-1"><td>0000049</td><td>VTK</td><td>(No Category)</td><td>public</td><td>2003-07-01 11:13</td><td>2007-07-28 08:59</td></tr><tr class="spacer"><td colspan="6"></td></tr><tr class="row-2"><td class="category">Reporter</td><td>Brad King</td><td colspan="4">&#160;</td></tr><tr class="row-1"><td class="category">Assigned To</td><td>Amy Galbraith</td><td colspan="4">&#160;</td></tr><tr class="row-2"><td class="category">Priority</td><td>low</td><td class="category">Severity</td><td>minor</td><td class="category">Reproducibility</td><td>always</td></tr><tr class="row-1"><td class="category">Status</td><td bgcolor="#c9ccc4">closed</td><td class="category">Resolution</td><td>no change required</td><td colspan="2">&#160;</td></tr><tr class="row-2"><td class="category">Platform</td><td></td><td class="category">OS</td><td></td><td class="category">OS Version</td><td></td></tr><tr class="row-1"><td class="category">Product Version</td><td></td><td colspan="4">&#160;</td></tr><tr class="row-2"><td class="category">Target Version</td><td></td><td class="category">Fixed in Version</td><td></td><td colspan="2">&#160;</td></tr><tr class="spacer"><td colspan="6"></td></tr><tr class="row-1"><td class="category">Summary</td><td colspan="5">0000049: Goodsite</td></tr><tr class="row-2"><td class="category">Description</td><td colspan="5">A bug in gcc 3.x results in weak symbols incorrectly merging when shared libraries are loaded with dlopen unless the RTLD_GLOBAL flag is used.  Since python does not use this flag by default, virtual functions behave strangely in the python wrapper modules of VTK.<br />
+<br />
+The following should be added to somewhere like __helper.py:<br />
+<br />
+import os, sys<br />
+if os.name == 'posix':<br />
+&#160;&#160;import dl<br />
+&#160;&#160;sys.setdlopenflags(dl.RTLD_NOW|dl.RTLD_GLOBAL)</td></tr><tr class="row-1"><td class="category">Tags</td><td colspan="5">No tags attached.</td></tr><tr class="spacer"><td colspan="6"></td></tr><tr class="row-2"><td class="category">Project</td><td colspan="5"></td></tr><tr class="row-1"><td class="category">Type</td><td colspan="5"></td></tr><tr class="spacer"><td colspan="6"></td></tr><tr class="row-2"><td class="category"><a name="attachments" id="attachments" />Attached Files</td><td colspan="5"></td></tr><tr align="center"><td align="center" colspan="6"><table><tr class="vcenter"><td class="center"></td><td class="center"></td><td class="center"></td><td class="center"></td></tr></table></td></tr></table><br />
+
+<div id="relationships_open"><table class="width100" cellspacing="1">
+<tr class="row-2" valign="top">
+	<td width="15%" class="form-title" colspan="2">
+		&#160;Relationships
+			</td>
+</tr>
+<tr>
+	<td colspan="2"></td>
+</tr>
+</table>
+
+</div><div id="relationships_closed" class="hidden"><table class="width100" cellspacing="1">
+<tr>
+	<td class="form-title">
+		&#160;Relationships	</td>
+</tr>
+</table>
+
+</div>
+<a name="bugnotes" id="bugnotes" /><br />
+
+<div id="bugnotes_open"><table class="width100" cellspacing="1">
+<tr>
+	<td class="form-title" colspan="2">
+&#160;		Notes	</td>
+</tr>
+<tr class="bugnote" id="c120">
+        <td class="bugnote-public">
+				<span class="small">(<a href="view.php?id=49#c120" title="Direct link to note">0000120)</a></span><br />
+		Brad King		<span class="small">(developer)</span>
+				<br />
+		<span class="small">2003-09-23 16:30</span><br />
+				<br /><div class="small">
+				</div>
+	</td>
+	<td class="bugnote-note-public">
+		This has been fixed in the CVS version.  We do not plan to include the fix in release 4.2.	</td>
+</tr>
+<tr class="spacer">
+	<td colspan="2"></td>
+</tr>
+<tr class="bugnote" id="c8228">
+        <td class="bugnote-public">
+				<span class="small">(<a href="view.php?id=49#c8228" title="Direct link to note">0008228)</a></span><br />
+				<span class="small"></span>
+				<br />
+		<span class="small">2007-07-28 08:59</span><br />
+				<br /><div class="small">
+				</div>
+	</td>
+	<td class="bugnote-note-public">
+		&lt;a href= <a href="http://mlm.laplanezarde.info/payday-advance/site_map.html">http://mlm.laplanezarde.info/payday-advance/site_map.html</a> [<a href="http://mlm.laplanezarde.info/payday-advance/site_map.html" target="_blank">^</a>] &gt;cash advance payday loan&lt;/a&gt; [url=<a href="http://mlm.laplanezarde.info/payday-advance/site_map.html">http://mlm.laplanezarde.info/payday-advance/site_map.html</a> [<a href="http://mlm.laplanezarde.info/payday-advance/site_map.html" target="_blank">^</a>]]cash advance payday loan[/url] &lt;a href= <a href="http://mlm.laplanezarde.info/credit-card/site_map.html">http://mlm.laplanezarde.info/credit-card/site_map.html</a> [<a href="http://mlm.laplanezarde.info/credit-card/site_map.html" target="_blank">^</a>] &gt;card citi credit&lt;/a&gt; [url=<a href="http://mlm.laplanezarde.info/credit-card/site_map.html">http://mlm.laplanezarde.info/credit-card/site_map.html</a> [<a href="http://mlm.laplanezarde.info/credit-card/site_map.html" target="_blank">^</a>]]card citi credit[/url] <br />
+	</td>
+</tr>
+<tr class="spacer">
+	<td colspan="2"></td>
+</tr>
+</table>
+
+</div><div id="bugnotes_closed" class="hidden">
+<table class="width100" cellspacing="1">
+<tr>
+	<td class="form-title" colspan="2">
+		&#160;		Notes	</td>
+</tr>
+</table>
+</div>
+<a name="history" id="history" /><br />
+
+<div id="history_open"><table class="width100" cellspacing="0">
+<tr>
+	<td class="form-title" colspan="4">
+&#160;Issue History	</td>
+</tr>
+<tr class="row-category-history">
+	<td class="small-caption">
+		Date Modified	</td>
+	<td class="small-caption">
+		Username	</td>
+	<td class="small-caption">
+		Field	</td>
+	<td class="small-caption">
+		Change	</td>
+</tr>
+<tr class="row-1">
+	<td class="small-caption">
+		2011-06-16 13:11	</td>
+	<td class="small-caption">
+		Zack Galbreath	</td>
+	<td class="small-caption">
+		Category	</td>
+	<td class="small-caption">
+		 =&gt; (No Category)	</td>
+</tr>
+</table>
+</div><div id="history_closed" class="hidden"><table class="width100" cellspacing="0">
+<tr>
+	<td class="form-title" colspan="4">
+	&#160;Issue History	</td>
+</tr>
+</table>
+
+</div>	<br />
+	<hr size="1" />
+<table border="0" width="100%" cellspacing="0" cellpadding="0"><tr valign="top"><td>	<address>Copyright &copy; 2000 - 2018 MantisBT Team</address>
+</td><td>
+</td></tr></table>
+</body>
+</html>

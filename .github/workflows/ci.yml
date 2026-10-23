@@ -1,0 +1,47 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    # The floor this project declares AND the newest: argparse changed how it
+    # validates a default at 3.14, and only the newest was ever run locally.
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ["3.12", "3.14"]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      # Exact tag: setup-uv publishes no moving major alias past v7.
+      - uses: astral-sh/setup-uv@v10.3.2
+        with:
+          enable-cache: true
+          python-version: ${{ matrix.python }}
+      - run: uv sync --frozen
+      # `uv run`, not `uvx`: uvx resolves ruff fresh, so a release that adds a
+      # rule turns this red on a commit that changed nothing.
+      - run: uv run ruff check .
+      - run: uv run ruff format --check .
+      - run: uv run pytest -q
+
+  workflows:
+    # A `run:` step carrying a stray `with:` makes a workflow silently cease to
+    # exist, which is not a failing check anywhere else.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - run: |
+          bash <(curl -fsSL https://raw.githubusercontent.com/rhysd/actionlint/main/scripts/download-actionlint.bash)
+          ./actionlint -color
+      - name: Every action it names has to exist
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: scripts/check-actions.sh
+      - run: shellcheck scripts/*.sh

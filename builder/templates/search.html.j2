@@ -1,0 +1,65 @@
+{% extends "base.html.j2" %}
+{% block head %}<link rel="stylesheet" href="/pagefind/pagefind-ui.css">{% endblock %}
+{% block content %}
+<div class="list-head">
+  <h1>Search</h1>
+  <span class="muted">Every issue, merge request and comment in the archive.</span>
+</div>
+
+<div id="search"></div>
+
+<p class="muted search-help">
+  Filter with <code>state:</code> and <code>kind:</code> from the panel, or narrow by
+  typing. Agents: the same index is at
+  <code>/pagefind/pagefind.js</code>, and every page has a Markdown twin at
+  <code>.md</code>. See <a href="/llms.txt">llms.txt</a>.
+</p>
+
+<script src="/pagefind/pagefind-ui.js"></script>
+<script>
+window.addEventListener("DOMContentLoaded", function () {
+  if (typeof PagefindUI === "undefined") {
+    document.getElementById("search").innerHTML =
+      '<p class="note-cap">The search index is missing from this copy of the site. ' +
+      'Build it with <code>vtk-archive index</code>.</p>';
+    return;
+  }
+  new PagefindUI({
+    element: "#search",
+    showSubResults: true,
+    showImages: false,
+    pageSize: 20,
+    autofocus: true,
+  });
+  // ?q= and ?kind= let the list pages' search bars, a bookmark or an agent
+  // land straight on results. Both are optional; with neither, search is
+  // across issues and merge requests together.
+  var params = new URLSearchParams(location.search);
+  var q = params.get("q");
+  if (q) {
+    var box = document.querySelector("#search input");
+    if (box) {
+      box.value = q;
+      box.dispatchEvent(new Event("input", { bubbles: true }));
+    }
+  }
+  var kind = params.get("kind");
+  if (kind) {
+    // The filter checkboxes only exist once results have rendered.
+    var tries = 0;
+    var apply = setInterval(function () {
+      var boxes = document.querySelectorAll(".pagefind-ui__filter-value input");
+      for (var i = 0; i < boxes.length; i++) {
+        var name = boxes[i].id || "";
+        if (name.indexOf(kind) !== -1 && !boxes[i].checked) {
+          boxes[i].click();
+          clearInterval(apply);
+          return;
+        }
+      }
+      if (++tries > 40) clearInterval(apply);
+    }, 100);
+  }
+});
+</script>
+{% endblock %}

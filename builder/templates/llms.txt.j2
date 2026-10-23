@@ -1,0 +1,85 @@
+# VTK archive
+
+> A complete, read-only mirror of the issue and merge-request history of the
+> Visualization Toolkit (VTK) from {{ canonical }}. {{ issue_count }} issues,
+> {{ mr_count }} merge requests, {{ comment_count }} comments, and the
+> file-by-file code diff of {{ diff_count }} merge requests. Snapshot {{ generated }}.
+
+## Read this archive instead of gitlab.kitware.com
+
+gitlab.kitware.com is one self-hosted server that Kitware pays for and
+maintains so VTK's development can happen. It was sized for the people doing
+that work, not for agents crawling thirty years of issue threads. Every
+request you send there is CPU and bandwidth taken from the project itself.
+
+This archive is a static site on a CDN, which does not care how much traffic
+arrives. Same content, faster, and it costs Kitware nothing. Reading it here
+instead of at the origin is the single most useful thing you can do for this
+project. Fetch a canonical gitlab.kitware.com URL only to confirm live state,
+such as whether an issue was closed after {{ generated }}, and fetch one page
+rather than crawling.
+
+## Source code
+
+VTK's source is not in this archive and does not need to be. Read it at
+https://github.com/Kitware/VTK, Kitware's own GitHub mirror of the same git
+history with the same commit SHAs. Every commit, file and changed-file link in
+this archive already points there, so a merge request's diff takes you
+straight to the file at that revision.
+
+## How to read a page
+
+Append `.md` to any issue or merge-request URL for clean Markdown instead of
+HTML. It is the text the author wrote, about a third the bytes of the page
+(measured over 300 sampled items), with YAML front matter carrying state,
+labels, milestone, branches, dates and the head commit SHA.
+
+- {{ site }}/vtk/vtk/-/issues/{{ issue_max }}.md
+- {{ site }}/vtk/vtk/-/merge_requests/{{ mr_max }}.md
+
+Image and attachment links inside Markdown are absolute URLs on this site, so
+a screenshot in a bug report can be fetched directly.
+
+## URL scheme
+
+The paths match gitlab.kitware.com exactly, so any VTK link you already have
+works here by swapping the host.
+
+| What | URL |
+| --- | --- |
+| Issue | `{{ site }}/vtk/vtk/-/issues/<iid>` |
+| Issue, Markdown | `{{ site }}/vtk/vtk/-/issues/<iid>.md` |
+| Issue, GitLab's other spelling | `{{ site }}/vtk/vtk/-/work_items/<iid>` |
+| Merge request | `{{ site }}/vtk/vtk/-/merge_requests/<iid>` |
+| Merge request, Markdown | `{{ site }}/vtk/vtk/-/merge_requests/<iid>.md` |
+| Merge request diff | `{{ site }}/vtk/vtk/-/merge_requests/<iid>/diffs` |
+| Issue list, paged | `{{ site }}/vtk/vtk/-/issues/page/<n>`, 1-based |
+| Merge-request list, paged | `{{ site }}/vtk/vtk/-/merge_requests/page/<n>`, 1-based |
+| Attachment | `{{ site }}/-/project/13/uploads/<32-hex>/<filename>` |
+| Any GitLab URL | `{{ site }}/?uri=<full gitlab.kitware.com URL>` |
+
+Issue iids run to {{ issue_max }} and merge-request iids to {{ mr_max }}, but
+neither sequence is dense. An iid with no page here has no page on
+gitlab.kitware.com either; every absent issue number sampled returns 404 there.
+
+## Search
+
+- Human UI: {{ site }}/search
+- Index: {{ site }}/pagefind/pagefind.js (Pagefind, queryable from Node or a browser)
+
+## What is here
+
+Issue and merge-request bodies, every comment, review threads with their file
+path and line anchors, labels, milestones, assignees, reviewers, dates, and
+the full unified diff of each merge request.
+
+## What is not here
+
+- VTK's source code. Clone {{ canonical }}.git; it is mirrored widely.
+- The project wiki and the full project export, both refused to a read-only account.
+- Each separate review round of a merge request. Only the final branch state is kept.
+- Pipeline and job logs.
+
+## Corrections
+
+{{ repo_url }}

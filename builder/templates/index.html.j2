@@ -1,0 +1,54 @@
+{% extends "base.html.j2" %}
+{% import "_parts.html.j2" as p with context %}
+{% block content %}
+<div class="list-head">
+  <h1>{{ heading }}</h1>
+  <span class="muted">{{ '{:,}'.format(total) }} total &middot; page {{ page }} of {{ pages }}</span>
+</div>
+
+{# A GET form, so it works with scripting off and the result is a real URL
+   anyone can share. The filter preselects this list's kind; the search page
+   covers issues and merge requests together and the filter can be cleared. #}
+<form class="searchbar" action="/search" method="get" role="search">
+  <input type="search" name="q" placeholder="Search {{ heading | lower }} and comments"
+         aria-label="Search the archive" autocomplete="off">
+  <input type="hidden" name="kind" value="{{ 'Merge request' if kind == 'merge_requests' else 'Issue' }}">
+  <button type="submit">Search</button>
+  <a class="all" href="/search">Search everything</a>
+</form>
+
+<div class="listing">
+  {%- for row in rows %}
+  <div class="row">
+    <span class="pill pill-{{ 'merged' if row.state == 'merged' else row.state }} small">
+      {%- if row.state == "opened" %}Open{% elif row.state == "merged" %}Merged
+      {%- elif row.state == "closed" %}Closed{% else %}{{ row.state }}{% endif -%}
+    </span>
+    <div class="row-main">
+      <a class="row-title" href="{{ row.href }}">{{ row.title }}</a>
+      {%- if row.labels %}
+      {%- for label in row.labels %}
+      <a class="chip" href="/vtk/vtk/-/labels/{{ label | slug }}">{{ label }}</a>
+      {%- endfor %}
+      {%- endif %}
+      <div class="row-meta">
+        {{ sigil }}{{ row.iid }} opened
+        <time datetime="{{ row.created_at }}">{{ row.created_at[:10] }}</time>
+        by {{ row.author }}
+      </div>
+    </div>
+    {%- if row.comments %}
+    <a class="row-cmt" href="{{ row.href }}" aria-label="{{ row.comments }} comments">
+      {{ row.comments }}
+    </a>
+    {%- endif %}
+  </div>
+  {%- endfor %}
+</div>
+
+<nav class="pager">
+  {%- if page > 1 %}<a href="{{ prev_href }}">&larr; Newer</a>{% endif %}
+  <span class="muted">{{ page }} / {{ pages }}</span>
+  {%- if page < pages %}<a href="{{ next_href }}">Older &rarr;</a>{% endif %}
+</nav>
+{% endblock %}

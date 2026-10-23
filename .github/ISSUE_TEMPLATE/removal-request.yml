@@ -1,0 +1,59 @@
+name: Removal or correction request
+description: Ask for something to be removed from or corrected in the archive.
+title: "[removal] "
+labels: ["removal-request"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        If you wrote something in VTK's GitLab and would rather it not be
+        mirrored here, say so and it comes down. The same goes for personal data
+        and for anything that should not have been public in the first place,
+        whoever wrote it.
+
+        Everything else here is a public technical discussion this archive
+        exists to preserve, so tell us what the concern is and it will be read
+        on its merits.
+
+        If you would rather not raise it in public, open this issue with nothing
+        but a single line saying so, and a private channel will be arranged.
+
+        This archive is not operated by Kitware. Removing something here does
+        not remove it from gitlab.kitware.com, which is the original and remains
+        authoritative.
+  - type: input
+    id: url
+    attributes:
+      label: Page
+      description: The archive URL, or the canonical gitlab.kitware.com URL.
+      placeholder: https://.../vtk/vtk/-/issues/20218
+    validations:
+      required: true
+  - type: dropdown
+    id: what
+    attributes:
+      label: What should happen
+      options:
+        - Remove the whole page
+        - Remove one comment
+        - Remove an attachment or image
+        - Correct something that is wrong
+        - Something else, described below
+    validations:
+      required: true
+  - type: textarea
+    id: detail
+    attributes:
+      label: Detail
+      description: >
+        Which comment or file, if it is not the whole page, and what the
+        concern is.
+    validations:
+      required: false
+  - type: checkboxes
+    id: author
+    attributes:
+      label: Optional
+      options:
+        - label: I wrote the content in question.
+          required: false

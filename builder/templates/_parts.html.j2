@@ -1,0 +1,197 @@
+{# Pieces shared by the conversation page and the files-changed page. #}
+
+{% macro state_pill(item, kind) -%}
+{%- set s = item.state or "unknown" -%}
+{%- set merged = kind == "merge_requests" and s == "merged" -%}
+<span class="pill pill-{{ 'merged' if merged else s }}">
+  {%- if merged %}Merged{% elif s == "opened" %}Open{% elif s == "closed" %}Closed{% else %}{{ s }}{% endif -%}
+</span>
+{%- endmacro %}
+
+{% macro avatar(name) -%}
+<span class="avatar" aria-hidden="true">{{ name[:1] | upper }}</span>
+{%- endmacro %}
+
+{% macro item_header(item, kind, sigil, author, canonical, tab, diff_count) %}
+<div class="item-head">
+  <h1>{{ item.title }} <span class="num">{{ sigil }}{{ item.iid }}</span></h1>
+  <div class="subline">
+    {{ state_pill(item, kind) }}
+    <span class="who">
+      {{ avatar(author) }}<strong>{{ author }}</strong>
+      opened this {{ 'merge request' if kind == 'merge_requests' else 'issue' }} on
+      <time datetime="{{ item.created_at }}">{{ item.created_at[:10] }}</time>
+    </span>
+    {%- if kind == "merge_requests" and item.get('source_branch') %}
+    <span class="branches">
+      <code>{{ item.get('target_branch') or '?' }}</code>
+      <span class="arrow">&larr;</span>
+      <code>{{ item.get('source_branch') }}</code>
+    </span>
+    {%- endif %}
+  </div>
+</div>
+
+{%- if kind == "merge_requests" %}
+<nav class="sub-tabs">
+  <a href="/vtk/vtk/-/merge_requests/{{ item.iid }}" {% if tab == "conversation" %}class="on"{% endif %}>
+    Conversation
+  </a>
+  {# Only when a diffs page was actually written. 352 merge requests hold a
+     diff record with no files, and the tab linked them to a 404. #}
+  {%- if diff_count %}
+  <a href="/vtk/vtk/-/merge_requests/{{ item.iid }}/diffs" {% if tab == "diffs" %}class="on"{% endif %}>
+    Files changed<span class="counter">{{ diff_count }}</span>
+  </a>
+  {%- endif %}
+</nav>
+{%- endif %}
+{% endmacro %}
+
+{% macro sidebar(item, kind, author, canonical, md_url) %}
+<aside class="side">
+  {%- if item.labels %}
+  <section>
+    <h3>Labels</h3>
+    <div class="chips">
+      {%- for label in item.labels %}
+      <a class="chip" href="/vtk/vtk/-/labels/{{ label | slug }}">{{ label }}</a>
+      {%- endfor %}
+    </div>
+  </section>
+  {%- endif %}
+
+  {%- if item.get('milestone') %}
+  <section>
+    <h3>Milestone</h3>
+    <p>{{ item.milestone.title }}</p>
+  </section>
+  {%- endif %}
+
+  {%- if item.get('assignees') %}
+  <section>
+    <h3>Assignees</h3>
+    {%- for a in item.assignees %}
+    <p class="person">{{ avatar(a.get('name') or a.get('username') or '?') }}{{ a.get('name') or a.get('username') }}</p>
+    {%- endfor %}
+  </section>
+  {%- endif %}
+
+  {%- if item.get('reviewers') %}
+  <section>
+    <h3>Reviewers</h3>
+    {%- for a in item.reviewers %}
+    <p class="person">{{ avatar(a.get('name') or a.get('username') or '?') }}{{ a.get('name') or a.get('username') }}</p>
+    {%- endfor %}
+  </section>
+  {%- endif %}
+
+  <section>
+    <h3>Dates</h3>
+    <dl class="dates">
+      <dt>Opened</dt><dd>{{ item.created_at[:10] }}</dd>
+      {%- if item.get('merged_at') %}<dt>Merged</dt><dd>{{ item.merged_at[:10] }}</dd>{% endif %}
+      {%- if item.get('closed_at') %}<dt>Closed</dt><dd>{{ item.closed_at[:10] }}</dd>{% endif %}
+      {%- if item.get('updated_at') %}<dt>Updated</dt><dd>{{ item.updated_at[:10] }}</dd>{% endif %}
+    </dl>
+  </section>
+
+  {%- if kind == "merge_requests" and item.get('sha') %}
+  <section>
+    <h3>Head commit</h3>
+    {%- if code_sha %}
+    <p><a class="mono" href="https://github.com/Kitware/VTK/commit/{{ item.sha }}"
+       rel="nofollow noopener">{{ item.sha[:12] }}</a></p>
+    <p class="muted">on Kitware's GitHub mirror</p>
+    {%- else %}
+    <p class="mono">{{ item.sha[:12] }}</p>
+    <p class="muted">Never merged, so this commit is not in the public mirror.
+    The diff here is the only copy.</p>
+    {%- endif %}
+  </section>
+  {%- endif %}
+
+  <section>
+    <h3>This page</h3>
+    <p><a href="{{ md_url }}">Markdown version</a></p>
+    <p><a href="{{ canonical }}" rel="nofollow noopener">Canonical original</a></p>
+  </section>
+</aside>
+{% endmacro %}
+
+{% macro thread_block(thread) %}
+<section class="thread{% if thread.diff %} anchored{% endif %}{% if thread.resolved %} resolved{% endif %}">
+  {%- if thread.diff %}
+  <div class="anchor-head">
+    <code>{{ thread.diff.path }}</code>
+    {%- if thread.diff.line %}<span class="ln">line {{ thread.diff.line }}</span>{% endif %}
+    {%- if thread.resolved %}<span class="done">resolved</span>{% endif %}
+  </div>
+  {%- endif %}
+  {%- for note in thread.notes %}
+  <article class="note" id="note_{{ note.id }}">
+    <div class="note-head">
+      {{ avatar(note.author) }}
+      <strong>{{ note.author }}</strong>
+      <time datetime="{{ note.created_at }}">{{ note.created_at[:16] | replace("T", " ") }}</time>
+      <a class="permalink" href="#note_{{ note.id }}" aria-label="Permalink">#</a>
+    </div>
+    <div class="note-body md">{{ note.body }}</div>
+  </article>
+  {%- endfor %}
+</section>
+{% endmacro %}
+
+{# The pre-2015 discussion GitLab's migration left behind. Plain text, not
+   markdown: Mantis predates markdown in trackers, so `*` and `_` are literal
+   characters in these bodies. #}
+{% macro mantis_section(mantis) %}
+<section class="mantis">
+  <h2 class="section-head">
+    From VTK's Mantis tracker
+    <span class="muted">{{ mantis.notes | length }} comment{{ '' if mantis.notes | length == 1 else 's' }}
+      GitLab did not import</span>
+  </h2>
+
+  <p class="note-cap">This issue came across in VTK's 2015 move to GitLab. The
+  import carried the report but not the discussion under it, so these comments
+  appear on no GitLab page. They are archived from
+  <a href="{{ mantis.url }}" rel="nofollow noopener">{{ mantis.url | replace("https://", "") }}</a>,
+  a tracker whose own front page now answers 404.</p>
+
+  {%- if mantis.steps_to_reproduce or mantis.additional_information %}
+  <div class="mantis-extra">
+    {%- if mantis.steps_to_reproduce %}
+    <h3>Steps to reproduce</h3>
+    <pre class="plain">{{ mantis.steps_to_reproduce }}</pre>
+    {%- endif %}
+    {%- if mantis.additional_information %}
+    <h3>Additional information</h3>
+    <pre class="plain">{{ mantis.additional_information }}</pre>
+    {%- endif %}
+  </div>
+  {%- endif %}
+
+  <div class="timeline">
+    {%- for note in mantis.notes %}
+    <article class="note" id="mantis_{{ note.id }}">
+      <div class="note-head">
+        {{ avatar(note.author or "?") }}
+        <strong>{{ note.author or "unknown" }}</strong>
+        <time datetime="{{ note.created_at }}">{{ note.created_at }}</time>
+        <a class="permalink" href="#mantis_{{ note.id }}" aria-label="Permalink">#</a>
+      </div>
+      <div class="note-body"><pre class="plain">{{ note.body }}</pre></div>
+    </article>
+    {%- endfor %}
+  </div>
+</section>
+{% endmacro %}
+
+{% macro system_entry(note) %}
+<div class="sys" id="note_{{ note.id }}">
+  {{ avatar(note.author) }}
+  <span class="sys-text"><strong>{{ note.author }}</strong> {{ note.body }}</span>
+  <time datetime="{{ note.created_at }}">{{ note.created_at[:10] }}</time>
+</div>
+{% endmacro %}

@@ -46,21 +46,21 @@ CANONICAL = "https://gitlab.kitware.com/vtk/vtk"
 REPO_URL = "https://github.com/pyvista/vtk-archive"
 REMOVAL_URL = f"{REPO_URL}/issues/new?template=removal-request.yml"
 WORKFLOW_URL = f"{REPO_URL}/actions/workflows/refresh.yml"
-# Netlify reads this from the publish directory. An upload path carries the
-# file's own digest, so its bytes can never change under that URL and a year is
-# honest; everything else is rebuilt daily. docs/HOSTING.md "What bandwidth costs".
+# Netlify reads this from the publish directory. The LAST matching rule wins and
+# specificity counts for nothing, so the catch-all leads and every narrower rule
+# follows it. docs/HOSTING.md "Which header rule wins".
 HEADERS = f"""\
-{UPLOADS}/*
-  Cache-Control: public, max-age=31536000, immutable
-
-/pagefind/*
-  Cache-Control: public, max-age=86400
+/*
+  Cache-Control: public, max-age=3600, stale-while-revalidate=86400
 
 /assets/*
   Cache-Control: public, max-age=3600
 
-/*
-  Cache-Control: public, max-age=3600, stale-while-revalidate=86400
+/pagefind/*
+  Cache-Control: public, max-age=86400
+
+{UPLOADS}/*
+  Cache-Control: public, max-age=31536000, immutable
 """
 # The cron is daily, so two missed runs is a real failure rather than a slow day.
 STALE_AFTER_HOURS = 48

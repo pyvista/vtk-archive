@@ -56,6 +56,27 @@ bytes can never change and are cached for a year; everything else is rebuilt
 daily and gets an hour with `stale-while-revalidate`. Netlify serves `ETag` on
 static files by itself, so a conditional re-crawl costs a 304.
 
+### Which header rule wins
+
+**The last matching rule, and specificity counts for nothing.** Netlify
+documents neither, so it was measured on a draft deploy:
+
+| Request | Rules matching, in file order | Served |
+|---|---|---|
+| `/x/deep/f.txt` | `/x/*`, then `/x/deep/*` | the second |
+| `/y/deep/f.txt` | `/y/deep/*`, then `/y/*` | the second |
+
+So the catch-all goes **first** and every narrower rule after it. The first
+version of this file had it backwards, on the assumption that the first match
+wins: `/*` sat last and swallowed all three rules above it, including the
+`immutable` year on 1.18 GB of attachments. The suite was green, because it
+read the generated text and agreed with itself about precedence.
+
+`scripts/check-headers.sh` asks the deployed site instead, and `refresh.yml`
+runs it after every deploy. It fails on exactly that shape, and it refuses to
+run at all if it cannot find an attachment in `dist/` to ask about, since a
+check with nothing to assert on is worse than no check.
+
 R2 is free at this size: 2.4 GB against a 10 GB free tier, a few thousand Class
 A operations a month against a million, and no egress charge at all.
 

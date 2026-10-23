@@ -110,6 +110,11 @@ jobs:
         # default. docs/HOSTING.md "Partial deploys on Netlify".
         run: npx --yes netlify-cli@27 deploy --dir dist --prod --no-build --timeout 3600
 
+      # Netlify's rule precedence is documented nowhere, so ask the wire.
+      - name: The cache headers reach the wire
+        if: ${{ github.event_name == 'schedule' || inputs.deploy }}
+        run: scripts/check-headers.sh "${{ vars.VTK_ARCHIVE_SITE }}" dist
+
       - name: Keep the run's own account of itself
         if: always()
         uses: actions/upload-artifact@v7
